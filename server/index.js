@@ -5,6 +5,7 @@ import errorMiddleware from './middleware/error.middleware.js';
 import registrationRouter from './router/registration.router.js';
 import authRouter from './router/auth.router.js';
 import classRouter from './router/class.router.js';
+import scheduleRouter from './router/schedule.router.js';
 import cookieParser from 'cookie-parser';
 
 
@@ -22,7 +23,7 @@ app.use(cookieParser());
 app.use('/registration', registrationRouter);
 app.use('/auth', authRouter)
 app.use('/class', classRouter);
-
+app.use('/schedule', scheduleRouter);
 // middlewares
 app.use(errorMiddleware);
 
