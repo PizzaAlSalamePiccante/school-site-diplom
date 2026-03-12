@@ -7,4 +7,6 @@ const Token = new Schema({
     deviceInfo: {type: String}
 });
 
+Token.index({ "expiresAt": 1 }, { expireAfterSeconds: 0 });
+
 export default model('Token', Token);

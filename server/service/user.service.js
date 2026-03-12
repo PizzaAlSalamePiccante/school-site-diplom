@@ -8,9 +8,10 @@ import studentModel from '../models/student.model.js';
 import guardianModel from '../models/guardian.model.js';
 import teacherModel from '../models/teacher.model.js';
 import adminModel from '../models/admin.model.js';
+import tokenService from './token.service.js';
 
 class UserService {
-    async userCreate (userData, session) {
+    async userCreate (userData) {
         const {
             login, 
             password, 
@@ -26,140 +27,130 @@ class UserService {
 
         const hashPassword = await bcrypt.hash(password, 5);
 
-        const [user] = await userModel.create([{
+        const user = await userModel.create({
             login,
             password: hashPassword,
             firstName,
             lastName,
             middleName
-        }], { session });
+        });
 
         return user;
     }
     async guardianCreate (guardianData) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-        try {
-            const { 
-                phone, 
-                email,
-                userData
-            } = guardianData;
-
-            const user = await this.userCreate(userData, session);
-
-            const [guardian] = await guardianModel.create([{
-                user: user._id,
-                phone,
-                email,
-            }], { session });
-            await session.commitTransaction();
-            session.endSession();
-
-            return guardian;
-        } catch (e) {
-            await session.abortTransaction();
-            session.endSession();
-            throw ApiError.BadRequest(e.toString())
-        }
+        const { 
+            phone, 
+            email,
+            userData
+        } = guardianData;
+        const user = await this.userCreate(userData);
+        const guardian = await guardianModel.create({
+            user: user._id,
+            phone,
+            email,
+        });
+        return guardian;
     }
     async studentCreate (studentData) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-        try {
-            const { 
-                classId, 
-                guardianId,
-                userData
-            } = studentData;
-
-            const user = await this.userCreate(userData, session);
-
-            const [student] = await studentModel.create([{
-                user: user._id,
-                classId: classId,
-                guardian: guardianId || null,
-            }], { session });
-            await session.commitTransaction();
-            session.endSession();
-
-            return student;
-        } catch (e) {
-            await session.abortTransaction();
-            session.endSession();
-            throw ApiError.BadRequest(e.toString())
-        }
+        const { 
+            classId, 
+            guardianId,
+            userData
+        } = studentData;
+        const user = await this.userCreate(userData);
+        const student = await studentModel.create({
+            user: user._id,
+            classId: classId,
+            guardianId: guardianId || null,
+        });
+        return student;
 
     }
     async teacherCreate (teacherData) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-        try {
-            const { 
-                subjects,
-                classId, 
-                workEmail,
-                workPhone,
-                userData
-            } = teacherData;
-
-            const user = await this.userCreate(userData, session);
-
-            const [teacher] = await teacherModel.create([{
-                user: user._id,
-                subjects,
-                homeroomClass: classId,
-                workEmail,
-                workPhone
-            }], { session });
-            await session.commitTransaction();
-            session.endSession();
-
-            return teacher;
-        } catch (e) {
-            await session.abortTransaction();
-            session.endSession();
-            throw ApiError.BadRequest(e.toString())
-        }
+        const { 
+            subjects,
+            classId, 
+            workEmail,
+            workPhone,
+            userData
+        } = teacherData;
+        const user = await this.userCreate(userData);
+        const teacher = await teacherModel.create({
+            user: user._id,
+            subjects,
+            homeroomClass: classId,
+            workEmail,
+            workPhone
+        });
+        return teacher;
 
     }
     async adminCreate (adminData) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-        try {
-            const { 
-                canManageSchedule,
-                canManagePosts, 
-                canManageTeachers,
-                canManageStudents,
-                canManageGuardians,
-                canManageAdmins,
-                canViewLogs,
-                userData
-            } = adminData;
+        const { 
+            canManageSchedule,
+            canManagePosts, 
+            canManageTeachers,
+            canManageStudents,
+            canManageGuardians,
+            canManageAdmins,
+            canViewLogs,
+            userData
+        } = adminData;
+        const user = await this.userCreate(userData);
+        const admin = await adminModel.create({
+            user: user._id,
+            canManageSchedule,
+            canManagePosts,
+            canManageTeachers,
+            canManageStudents,
+            canManageGuardians,
+            canManageAdmins,
+            canViewLogs
+        });
+        return admin;
+    }
 
-            const user = await this.userCreate(userData, session);
+    async login (login, password) {
 
-            const [admin] = await adminModel.create([{
-                user: user._id,
-                canManageSchedule,
-                canManagePosts,
-                canManageTeachers,
-                canManageStudents,
-                canManageGuardians,
-                canManageAdmins,
-                canViewLogs
-            }], { session });
-            await session.commitTransaction();
-            session.endSession();
-
-            return admin;
-        } catch (e) {
-            await session.abortTransaction();
-            session.endSession();
-            throw ApiError.BadRequest(e.toString())
+        const user = await userModel.findOne({login});
+        if (!user) {
+            throw ApiError.BadRequest(`User with login ${login} not exists`);
         }
 
+        const isPassEquals = await bcrypt.compare(password, user.password);
+        if (!isPassEquals) {
+            throw ApiError.BadRequest(`Incorrect password`);
+        }
+
+        const userDto = new UserDto(user);
+        const tokens = tokenService.generateToken({...userDto});
+
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30); // Я изменил на 30 дней и в сервисе пока что
+
+        await tokenService.saveToken(userDto.id, tokens.refreshToken, expiresAt);
+
+        return {...tokens, user: userDto}
+    }
+    async logout (refreshToken) {
+        const token = await tokenService.removeToken(refreshToken);
+        return token;
+    }
+    async refresh (refreshToken) {
+        if (!refreshToken) {
+            throw ApiError.UnauthorizedError();
+        }
+        const userData = tokenService.validateRefreshToken(refreshToken);
+        const tokenFromDb = await tokenService.findToken(refreshToken);
+        if (!userData || !tokenFromDb) {
+            throw ApiError.UnauthorizedError();
+        }
+        const user = await userModel.findById(userData.id);
+        const userDto = new UserDto(user);
+        const tokens = tokenService.generateToken({...userDto});
+
+        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+        return {...tokens, user: userDto}
     }
 }
 
