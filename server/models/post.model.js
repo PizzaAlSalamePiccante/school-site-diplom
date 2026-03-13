@@ -6,8 +6,6 @@ const Post = new Schema({
     content: {type: String, required: true},
     image: {type: String, required: true},
     category: {type: String, enum: ['news', 'announcement', 'event'], default: 'news'},
-    createdAt: {type: Date, default: Date.now},
-    updatedAt: {type: Date},
-});
+}, { timestamps: true });
 
 export default model('Post', Post);

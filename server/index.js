@@ -6,7 +6,9 @@ import registrationRouter from './router/registration.router.js';
 import authRouter from './router/auth.router.js';
 import classRouter from './router/class.router.js';
 import scheduleRouter from './router/schedule.router.js';
+import postRouter from './router/post.router.js';
 import cookieParser from 'cookie-parser';
+import fileUpload from 'express-fileupload';
 
 
 configDotenv.config();
@@ -18,12 +20,15 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use('/static', express.static('static'));
+app.use(fileUpload({}));
 
 // routers
 app.use('/registration', registrationRouter);
 app.use('/auth', authRouter)
 app.use('/class', classRouter);
 app.use('/schedule', scheduleRouter);
+app.use('/post', postRouter);
 // middlewares
 app.use(errorMiddleware);
 
