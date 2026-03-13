@@ -39,3 +39,7 @@ yarn-error.log*
 /build/
 */dist/
 */build/
+# Static images
+/static/images/post/
+/static/images/post/*
+/static/images/post/**/*
