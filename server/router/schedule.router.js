@@ -3,8 +3,8 @@ import scheduleController from "../controllers/schedule.controller.js";
 
 const router = new Router();
 
-router.post('/', scheduleController.createSchedule);
-router.put('/:scheduleId', scheduleController.updateSchedule);
-router.delete('/:scheduleId', scheduleController.deleteSchedule)
+router.post('/', scheduleController.create);
+router.put('/:scheduleId', scheduleController.update);
+router.delete('/:scheduleId', scheduleController.delete)
 
 export default router;

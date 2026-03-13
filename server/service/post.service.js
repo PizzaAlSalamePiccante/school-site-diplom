@@ -4,7 +4,7 @@ import postModel from "../models/post.model.js";
 import userModel from '../models/user.model.js';
 
 class PostService {
-    async createPost (postData) {  
+    async create (postData) {  
         const {
             userId,
             title,
@@ -21,7 +21,7 @@ class PostService {
             //throw ApiError.BadRequest(`All fields must be filled in`);
         }
 
-        const imageName = imageService.saveImage(image);
+        const imageName = imageService.save(image);
 
         const createdPost = await postModel.create({
             user: userId,
@@ -32,6 +32,43 @@ class PostService {
         });
 
         return createdPost;
+    }
+    async update (postData) {
+        const {
+            postId,
+            title,
+            content,
+            image,
+            category
+        } = postData;
+
+        const postToUpdate = await postModel.findById(postId);
+        if (!postToUpdate) {
+            throw ApiError.BadRequest(`Post ${postId} not found`);
+        }
+
+        imageService.delete(postToDelete.image);
+
+        postToUpdate.title = title;
+        postToUpdate.content = content;
+        postToUpdate.image = imageService.save(image);
+        postToUpdate.category = category;
+
+        const updatedPost = await postToUpdate.save();
+
+        return updatedPost;
+    }
+    async delete (postId) {
+        const postToDelete = await postModel.findById(postId);
+        if (!postToDelete) {
+            throw ApiError.BadRequest(`Post ${postId} not found`);
+        }
+
+        imageService.delete(postToDelete.image);
+        
+        const deletedPost = await postModel.deleteOne({ _id: postId })
+
+        return deletedPost;
     }
 }
 

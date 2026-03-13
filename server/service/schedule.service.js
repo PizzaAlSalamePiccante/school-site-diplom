@@ -3,7 +3,7 @@ import classModel from "../models/class.model.js";
 import scheduleModel from "../models/schedule.model.js";
 
 class ScheduleService {
-    async createSchedule (scheduleData) {
+    async create (scheduleData) {
         const { classId, schedule} = scheduleData;
 
         const classExists = await classModel.findById(classId);
@@ -18,7 +18,7 @@ class ScheduleService {
 
         return createdSchedule;
     }
-    async updateSchedule (scheduleData) {
+    async update (scheduleData) {
         const { scheduleId, schedule } = scheduleData;
 
         const scheduleToUpdate = await scheduleModel.findById(scheduleId);
@@ -31,7 +31,7 @@ class ScheduleService {
 
         return updatedSchedule;
     }
-    async deleteSchedule (scheduleId) {
+    async delete (scheduleId) {
         const scheduleToDelete = await scheduleModel.findById(scheduleId);
         if (!scheduleToDelete) {
              throw ApiError.BadRequest(`Schedule ${scheduleId} not found`);

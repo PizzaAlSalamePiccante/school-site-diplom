@@ -3,8 +3,8 @@ import postController from "../controllers/post.controller.js";
 
 const router = new Router();
 
-router.post('/', postController.createPost);
-//router.put('/:scheduleId', scheduleController.updateSchedule);
-//router.delete('/:scheduleId', scheduleController.deleteSchedule)
+router.post('/', postController.create);
+router.put('/:postId', postController.update);
+router.delete('/:postId', postController.delete);
 
 export default router;
