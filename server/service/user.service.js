@@ -25,7 +25,7 @@ class UserService {
             throw ApiError.BadRequest(`User with this login already exists - ${login}`);
         }
 
-        const hashPassword = await bcrypt.hash(password, 5);
+        const hashPassword = await bcrypt.hash(password, 10);
 
         const user = await userModel.create({
             login,
@@ -151,6 +151,29 @@ class UserService {
 
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
         return {...tokens, user: userDto}
+    }
+    async changePassword (userData) {
+        const { userId, oldPassword, newPassword } = userData;
+        if (!oldPassword || !newPassword) {
+            throw ApiError.BadRequest('Old password and new password are required'); // защита
+        }
+        
+        const user = await userModel.findById(userId);
+        if (!user) {
+            throw ApiError.BadRequest(`User ${userId} not exist`);
+        }
+
+        const isPassEquals = await bcrypt.compare(oldPassword, user.password);
+        if (!isPassEquals) {
+            throw ApiError.BadRequest(`Incorrect password`);
+        }
+
+        const hashPassword = await bcrypt.hash(newPassword, 5);
+        user.password = hashPassword;
+
+        const userWithChangedPassword = await user.save();
+
+        return userWithChangedPassword;
     }
 }
 

@@ -48,7 +48,7 @@ class UserController {
             next(e);
         }
     }
-    async logout(req, res, next) {
+    async logout (req, res, next) {
         try {
             const {refreshToken} = req.cookies;
             const token = await userService.logout(refreshToken);
@@ -58,12 +58,22 @@ class UserController {
             next(e);
         }
     }
-    async refresh(req, res, next) {
+    async refresh (req, res, next) {
         try {
             const {refreshToken} = req.cookies;
             const userData = await userService.refresh(refreshToken);
             res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true});
             return res.json(userData);
+        } catch (e) {
+            next(e);
+        }
+    }
+    async changePassword (req, res, next) {
+        try {
+            const { oldPassword, newPassword } = req.body;
+            const userId = req.user.id;
+            const user = await userService.changePassword({userId, oldPassword, newPassword});
+            return res.json(user);
         } catch (e) {
             next(e);
         }
