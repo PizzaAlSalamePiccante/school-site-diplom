@@ -10,6 +10,7 @@ class PostController {
                 category
              } = req.body; 
              const { image } = req.files;
+             if (!title || !content || !category || !image || !userId) throw ApiError.BadRequest('Missing required fields');
 
              const post = await postService.create({
                 userId, 
@@ -32,6 +33,7 @@ class PostController {
             } = req.body;
             const { image } = req.files;
             const { postId } = req.params;
+            if (!title || !content || !category || !image || !postId) throw ApiError.BadRequest('Missing required fields');
 
             const post = await postService.update({
                 postId,
@@ -48,6 +50,7 @@ class PostController {
     async delete (req, res, next) {
         try {
             const { postId } = req.params;
+            if (!postId) throw ApiError.BadRequest('Post id are required');
             const deletedPost = await postService.delete(postId);
             return res.json(deletedPost);
         } catch (e) {

@@ -1,6 +1,4 @@
 import bcrypt from 'bcrypt';
-import { v4 as uuid } from 'uuid';
-import mongoose from 'mongoose';
 import ApiError from '../exceptions/api.error.js';
 import userModel from "../models/user.model.js";
 import UserDto from '../dtos/user.dto.js';
@@ -168,7 +166,7 @@ class UserService {
             throw ApiError.BadRequest(`Incorrect password`);
         }
 
-        const hashPassword = await bcrypt.hash(newPassword, 5);
+        const hashPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashPassword;
 
         const userWithChangedPassword = await user.save();
