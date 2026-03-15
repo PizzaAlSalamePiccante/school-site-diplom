@@ -8,6 +8,7 @@ import profileRouter from './router/profile.router.js';
 import classRouter from './router/class.router.js';
 import scheduleRouter from './router/schedule.router.js';
 import postRouter from './router/post.router.js';
+import manageUsersRouter from './router/manageUsers.router.js';
 import cookieParser from 'cookie-parser';
 import fileUpload from 'express-fileupload';
 
@@ -31,6 +32,7 @@ app.use('/profile', profileRouter)
 app.use('/class', classRouter);
 app.use('/schedule', scheduleRouter);
 app.use('/post', postRouter);
+app.use('/user', manageUsersRouter);
 // middlewares
 app.use(errorMiddleware);
 
